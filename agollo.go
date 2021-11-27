@@ -102,6 +102,10 @@ func NewAgolloOnce(configServerURL []string, appID string, opts ...Option) (Agol
 	return a, a.initNamespace(a.opts.NameSpaces...)
 }
 
+
+
+
+
 func (a *agollo) initNamespace(namespaces ...string) error {
 	var errs []error
 	for _, namespace := range namespaces {

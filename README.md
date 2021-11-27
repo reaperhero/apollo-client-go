@@ -1,11 +1,11 @@
 # Agollo - Go Client for Apollo
 
-[![Build Status](https://travis-ci.org/shima-park/agollo.svg?branch=master)](https://travis-ci.org/shima-park/agollo)
-[![Go Report Card](https://goreportcard.com/badge/github.com/reaperhero/apollo-client-go)](https://goreportcard.com/report/github.com/shima-park/agollo)
+[![Build Status](https://travis-ci.org/shima-park/agollo.svg?branch=master)](https://travis-ci.org/reaperhero/apollo-client-go)
+[![Go Report Card](https://goreportcard.com/badge/github.com/reaperhero/apollo-client-go)](https://goreportcard.com/report/github.com/reaperhero/apollo-client-go)
 [![codebeat badge](https://codebeat.co/badges/bc2009d6-84f1-4f11-803e-fc571a12a1c0)](https://codebeat.co/projects/github-com-shima-park-agollo-master)
 [![golang](https://img.shields.io/badge/Language-Go-green.svg?style=flat)](https://golang.org)
-[![GoDoc](http://godoc.org/github.com/shima-park/agollo?status.svg)](http://godoc.org/github.com/shima-park/agollo)
-[![GitHub release](https://img.shields.io/github/release/shima-park/agollo.svg)](https://github.com/shima-park/agollo/releases)
+[![GoDoc](http://godoc.org/github.com/reaperhero/apollo-client-go?status.svg)](http://godoc.org/github.com/reaperhero/apollo-client-go/agollo)
+[![GitHub release](https://img.shields.io/github/release/shima-park/agollo.svg)](https://github.com/reaperhero/apollo-client-go/releases)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 携程Apollo Golang版客户端
@@ -21,7 +21,6 @@ go get -u github.com/reaperhero/apollo-client-go
 * 配置文件容灾
 * 支持多namespace, cluster
 * 客户端SLB
-* 提供Viper配置库的apollo插件
 * 支持通过 ACCESSKEY_SECRET 来实现 client 安全访问
 * 支持自定义签名认证
 
@@ -35,7 +34,7 @@ package main
 import (
 	"fmt"
 
-	apollo "github.com/reaperhero/apollo-client-go"
+	agollo "github.com/reaperhero/apollo-client-go"
 )
 
 var (
@@ -45,14 +44,29 @@ var (
 )
 
 func main() {
-		client,_ := apollo.NewAgolloOnce(
+	client, _ := agollo.NewAgolloOnce(
 		configServerURL,
 		configAppid,
-		apollo.WithNameSpaces(configNameSpaces),
-		apollo.WithLogger(agollo.NewLogger(apollo.LoggerWriter(os.Stdout))),
-		apollo.AutoFetchOnCacheMiss(),
-		apollo.FailTolerantOnBackupExists(),
+		agollo.WithNameSpaces(configNameSpaces),
+		agollo.WithLogger(agollo.NewLogger(agollo.LoggerWriter(os.Stdout))),
+		agollo.AutoFetchOnCacheMiss(),
+		agollo.FailTolerantOnBackupExists(),
 	)
-	client.GetAllNameSpaceValue()
+	// 一次性获取
+	for n, v := range client.GetAllNameSpaceValue() {
+		fmt.Println(n, v)
+	}
+	
+	// 监听变化
+	errCh := client.Start()
+	respCh := client.Watch()
+	for {
+		select {
+		case err := <-errCh:
+			fmt.Println(err)
+		case resp :=<-respCh:
+			fmt.Println(resp)
+		}
+	}
 }
 ```
